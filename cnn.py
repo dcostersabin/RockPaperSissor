@@ -5,6 +5,9 @@ from keras.layers import Flatten
 from keras.layers import Convolution2D
 from keras.layers import MaxPooling2D
 from keras.preprocessing.image import ImageDataGenerator
+from keras.models import load_model
+from keras.preprocessing.image import image
+import numpy as np
 
 BASE = os.getcwd()
 TOTAL_DATASET = BASE + '/Datasets/TotalDatasets/'
@@ -16,12 +19,22 @@ TOTAL_TRAINING_DATA = 0.8
 # define dir for saving model
 MODEL_DIR = BASE + '/Model/'
 NO_OF_EPOCH = 25
+TESTING_MODEL = TRAINING_SET + 'rock/2affjOmZChc9AXpR.png'
 
 
 def main():
     make_framework()
     train_test_split()
-    run()
+    if check_for_model():
+        classifier = load_model(MODEL_DIR + '/myModel')
+        load(classifier)
+    else:
+        print("Do You Want To Run Neural Network ")
+        decision = input("Press 'Y' If Yes")
+        if decision == 'Y':
+            run()
+        else:
+            print("Exiting The Program")
 
 
 def get_avg_files(dir_name):
@@ -132,6 +145,24 @@ def run():
         validation_steps=STEPS_IN_EPOCH_TEST)
     classifier.save(MODEL_DIR + 'myModel', overwrite=True)
     print("Model Trained And Saved At", MODEL_DIR)
+
+
+def load(classifier):
+    test_image = image.load_img(TESTING_MODEL, target_size=(150, 150))
+    test_image = image.img_to_array(test_image)
+    test_image = np.expand_dims(test_image, axis=0)
+    prediction = classifier.predict(test_image)
+    # print("The Prediction is ", prediction)
+    if prediction[0][0] == 1:
+        print("Paper")
+    elif prediction[0][1] == 1:
+        print("Rock")
+    elif prediction[0][2] == 1:
+        print("Scissors")
+
+
+def check_for_model():
+    return os.path.exists(MODEL_DIR + 'myModel')
 
 
 if __name__ == '__main__':
